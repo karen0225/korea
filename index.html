@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>韓國四日遊</title>
+<style>
+  :root {
+    --bg: #f5f2ed;
+    --surface: #ffffff;
+    --border: #d9d3c8;
+    --text: #2c2820;
+    --text-muted: #7a7060;
+    --accent: #c0392b;
+    --accent-light: #fdecea;
+    --tag-bg: #ede9e2;
+    --shadow: 0 1px 6px rgba(0,0,0,0.09);
+    --header-h: 54px;
+    --nav-h: 56px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'Georgia', 'Noto Serif TC', serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  .page { display: none; min-height: 100vh; padding-bottom: calc(var(--nav-h) + 16px); }
+  .page.active { display: block; }
+
+  .top-bar {
+    position: sticky; top: 0; z-index: 200;
+    height: var(--header-h);
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center;
+    padding: 0 16px; gap: 10px;
+  }
+  .top-bar .back-btn {
+    display: none; align-items: center; gap: 4px;
+    background: none; border: none; cursor: pointer;
+    font-size: 0.85rem; color: var(--accent); padding: 6px 4px;
+    font-family: inherit;
+  }
+  .top-bar .back-btn.show { display: flex; }
+  .top-bar h1 { font-size: 1rem; font-weight: normal; letter-spacing: 0.04em; flex: 1; }
+  .top-bar .subtitle { font-size: 0.78rem; color: var(--text-muted); }
+
+  .print-btn {
+    background: none; border: 1px solid var(--border);
+    border-radius: 5px; padding: 5px 10px;
+    font-size: 0.78rem; cursor: pointer; font-family: inherit;
+    color: var(--text-muted); white-space: nowrap;
+    transition: all 0.15s;
+  }
+  .print-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    height: var(--nav-h);
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    display: flex; z-index: 200;
+  }
+  .nav-item {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 3px;
+    cursor: pointer; border: none; background: none;
+    font-family: inherit; padding: 6px 0;
+    transition: background 0.15s;
+  }
+  .nav-item:active { background: var(--tag-bg); }
+  .nav-item .nav-icon { font-size: 1.3rem; line-height: 1; }
+  .nav-item .nav-label { font-size: 0.65rem; color: var(--text-muted); letter-spacing: 0.03em; }
+  .nav-item.active .nav-label { color: var(--accent); font-weight: bold; }
+
+  .content { max-width: 680px; margin: 0 auto; padding: 16px 14px; }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; overflow: hidden; box-shadow: var(--shadow);
+    margin-bottom: 14px;
+  }
+  .card-header {
+    padding: 12px 16px; border-bottom: 1px solid var(--border);
+    background: #faf8f5;
+  }
+  .card-header h2 {
+    font-size: 0.75rem; font-weight: normal;
+    letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted);
+  }
+  .card-body { padding: 16px; }
+
+  .day-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 16px;
+    cursor: pointer;
+    margin-bottom: 10px;
+    box-shadow: var(--shadow);
+    transition: transform 0.1s;
+  }
+  .day-card:active { transform: scale(0.98); }
+  .day-badge {
+    background: var(--accent-light); color: var(--accent);
+    font-size: 0.72rem; font-weight: bold;
+    padding: 4px 10px; border-radius: 20px;
+    white-space: nowrap; letter-spacing: 0.04em;
+  }
+  .day-card-info { flex: 1; }
+  .day-card-title { font-size: 0.95rem; margin-bottom: 3px; }
+  .day-card-sub { font-size: 0.75rem; color: var(--text-muted); }
+  .day-card-arrow { font-size: 0.8rem; color: var(--border); }
+
+  .day-maps {
+    display: flex; gap: 10px;
+    overflow-x: auto; padding-bottom: 6px;
+    margin-bottom: 14px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .day-maps::-webkit-scrollbar { display: none; }
+  .day-map-item {
+    flex-shrink: 0;
+    border: 1px solid var(--border); border-radius: 6px;
+    overflow: hidden; background: var(--bg);
+    width: 80vw; max-width: 340px;
+  }
+  .day-map-item img {
+    width: 100%; display: block;
+    max-height: 220px; object-fit: contain;
+    background: #eee; cursor: zoom-in;
+  }
+  .day-map-item .map-label {
+    padding: 5px 10px; font-size: 0.75rem;
+    color: var(--text-muted); border-top: 1px solid var(--border);
+    background: #faf8f5;
+  }
+  .day-map-placeholder {
+    width: 80vw; max-width: 340px;
+    height: 90px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.8rem; color: var(--border);
+    border: 1px dashed var(--border); border-radius: 6px;
+  }
+
+  .route-list { display: flex; flex-direction: column; }
+  .route-item { display: flex; align-items: flex-start; position: relative; }
+  .route-item:not(:last-child)::before {
+    content: ''; position: absolute;
+    left: 7px; top: 16px; width: 1px; bottom: 0;
+    background: var(--border);
+  }
+  .route-dot {
+    width: 15px; height: 15px; border-radius: 50%;
+    border: 2px solid var(--accent); background: var(--surface);
+    flex-shrink: 0; margin-top: 3px; position: relative; z-index: 1;
+  }
+  .route-content { flex: 1; padding: 2px 10px 14px 12px; }
+  .route-place { font-size: 0.9rem; font-weight: bold; }
+  .route-note { font-size: 0.78rem; color: var(--text-muted); margin-top: 3px; line-height: 1.55; }
+
+  .notes-block {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 18px 16px; margin-bottom: 14px;
+    box-shadow: var(--shadow);
+  }
+  .notes-block h3 {
+    font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--text-muted); margin-bottom: 10px; font-weight: normal;
+  }
+  .note-row { display: flex; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--bg); }
+  .note-row:last-child { border-bottom: none; }
+  .note-label { font-size: 0.78rem; color: var(--text-muted); min-width: 72px; padding-top: 2px; }
+  .note-val { font-size: 0.88rem; line-height: 1.6; }
+
+  .pack-category { margin-bottom: 6px; }
+  .pack-cat-header {
+    padding: 10px 16px; background: var(--tag-bg);
+    font-size: 0.78rem; letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+  }
+  .pack-items { padding: 4px 0; }
+  .pack-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 16px; border-bottom: 1px solid var(--bg);
+  }
+  .pack-item:last-child { border-bottom: none; }
+  .pack-item input[type="checkbox"] {
+    accent-color: var(--accent); width: 18px; height: 18px;
+    cursor: pointer; flex-shrink: 0;
+  }
+  .pack-item label { font-size: 0.88rem; cursor: pointer; flex: 1; transition: all 0.15s; }
+  .pack-item input:checked + label { text-decoration: line-through; color: var(--text-muted); }
+
+  .pack-progress-bar-wrap {
+    position: sticky; bottom: var(--nav-h);
+    background: var(--surface); border-top: 1px solid var(--border);
+    padding: 10px 16px; display: flex; align-items: center; gap: 10px; z-index: 10;
+  }
+  .progress-bar { flex: 1; height: 5px; background: var(--border); border-radius: 4px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--accent); border-radius: 4px; transition: width 0.3s; }
+  .progress-text { font-size: 0.78rem; color: var(--text-muted); white-space: nowrap; }
+
+  #lightbox {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.85); z-index: 999;
+    align-items: center; justify-content: center; cursor: zoom-out;
+  }
+  #lightbox.show { display: flex; }
+  #lightbox img { max-width: 95vw; max-height: 90vh; object-fit: contain; border-radius: 4px; }
+
+  @media print {
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    body { background: #fff; font-size: 11pt; }
+    .top-bar, .bottom-nav, #lightbox { display: none !important; }
+    .page { display: none !important; }
+    #print-area { display: block !important; padding: 0; }
+
+    .pr-cover {
+      text-align: center; padding: 32pt 0 20pt;
+      border-bottom: 1.5pt solid #c0392b; margin-bottom: 20pt;
+    }
+    .pr-cover h1 { font-size: 20pt; color: #c0392b; margin-bottom: 6pt; }
+    .pr-cover p  { font-size: 10pt; color: #7a7060; }
+
+    .pr-day { page-break-inside: avoid; margin-bottom: 24pt; }
+    .pr-day-header {
+      background: #ede9e2; padding: 6pt 10pt;
+      border-left: 4pt solid #c0392b; margin-bottom: 8pt;
+    }
+    .pr-day-header h2 { font-size: 12pt; color: #2c2820; font-weight: bold; }
+    .pr-day-header span { font-size: 9pt; color: #7a7060; }
+
+    .pr-maps { display: flex; gap: 8pt; margin-bottom: 8pt; flex-wrap: wrap; }
+    .pr-map-img { flex: 1; min-width: 120pt; max-height: 140pt; object-fit: contain; border: 0.5pt solid #d9d3c8; }
+    .pr-map-label { font-size: 7.5pt; color: #aaa; text-align: center; margin-top: 2pt; }
+    .pr-map-placeholder { border: 0.5pt dashed #d9d3c8; padding: 10pt; text-align: center; color: #aaa; font-size: 9pt; margin-bottom: 8pt; }
+
+    .pr-route { display: flex; gap: 8pt; margin-bottom: 6pt; align-items: flex-start; }
+    .pr-dot { width: 8pt; height: 8pt; border-radius: 50%; border: 1.5pt solid #c0392b; background: #fff; flex-shrink: 0; margin-top: 2pt; }
+    .pr-route-place { font-size: 10pt; font-weight: bold; }
+    .pr-route-note  { font-size: 8.5pt; color: #7a7060; margin-top: 1pt; }
+
+    .pr-section-title {
+      font-size: 9pt; text-transform: uppercase; letter-spacing: 0.08em;
+      color: #7a7060; border-bottom: 0.5pt solid #d9d3c8;
+      padding-bottom: 3pt; margin: 18pt 0 8pt;
+    }
+    .pr-note-block { margin-bottom: 10pt; }
+    .pr-note-block h3 { font-size: 9pt; text-transform: uppercase; letter-spacing: 0.06em; color: #7a7060; margin-bottom: 4pt; }
+    .pr-note-row { display: flex; gap: 8pt; font-size: 9pt; margin-bottom: 3pt; }
+    .pr-note-label { color: #7a7060; min-width: 60pt; }
+
+    .pr-pack-section { margin-bottom: 10pt; }
+    .pr-pack-section h3 { font-size: 9pt; text-transform: uppercase; letter-spacing: 0.06em; color: #7a7060; margin-bottom: 4pt; border-bottom: 0.5pt solid #ede9e2; padding-bottom: 2pt; }
+    .pr-pack-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2pt 10pt; }
+    .pr-pack-item { font-size: 9pt; display: flex; gap: 4pt; align-items: center; }
+    .pr-check-box { width: 8pt; height: 8pt; border: 1pt solid #aaa; display: inline-block; flex-shrink: 0; }
+    .pr-check-box.checked { background: #c0392b; }
+  }
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <button class="back-btn" id="back-btn" onclick="goBack()">‹ 返回</button>
+  <h1 id="page-title">每日行程</h1>
+  <span class="subtitle" id="page-sub"></span>
+  <button class="print-btn" onclick="printAll()">🖨 列印</button>
+</div>
+
+<!-- DAY LIST -->
+<div class="page active" id="page-days">
+  <div class="content" id="day-list-content"></div>
+</div>
+
+<!-- DAY DETAIL -->
+<div class="page" id="page-day-detail">
+  <div class="content" id="day-detail-content"></div>
+</div>
+
+<!-- NOTES -->
+<div class="page" id="page-notes">
+  <div class="content">
+    <div class="notes-block">
+      <h3>機票資訊</h3>
+      <div class="note-row"><span class="note-label">去程</span><span class="note-val">IT602 虎航  <br>TPE(第1航廈20:00) → ICN(第一航廈23:30)</span></div>
+      <div class="note-row"><span class="note-label">回程</span><span class="note-val">CI161 華航  <br>ICN(第2航廈12:45) → TPE(第1航廈14:20)</span></div>
+    </div>
+    <div class="notes-block">
+      <h3>飯店</h3>
+      <div class="note-row"><span class="note-label">名稱</span><span class="note-val">因菲尼酒店(호텔 인피니)</span></div>
+      <div class="note-row"><span class="note-label">地址</span><span class="note-val">268, Baekjegobun-ro, Songpa-gu, 松坡區, 05585 首爾, 韓國</span></div>
+      <div class="note-row"><span class="note-label">地址</span><span class="note-val">송파구 백제고분로 268, 송파구, 서울특별시</span></div>
+      <div class="note-row"><span class="note-label">Check-in</span><span class="note-val">00:00</span></div>
+      <div class="note-row"><span class="note-label">Check-out</span><span class="note-val">12:00</span></div>
+      <div class="note-row"><span class="note-label">Check-out</span><span class="note-val"> +82 2 425 1000</span></div>
+    </div>
+    <div class="notes-block">
+      <h3>注意事項</h3>
+      <div class="note-row"><span class="note-label">入境</span><span class="note-val">K-ETA 電子旅行許可（台灣人目前免費免簽，但建議事先確認最新規定）</span></div>
+      <div class="note-row"><span class="note-label">網路</span><span class="note-val">購買韓國 eSIM 或租借 Pocket Wi-Fi</span></div>
+      <div class="note-row"><span class="note-label">交通卡</span><span class="note-val">T-money 交通卡（機場可購買，便利商店可儲值）</span></div>
+      <div class="note-row"><span class="note-label">貨幣</span><span class="note-val">韓圓 KRW，建議事先兌換部分現金</span></div>
+      <div class="note-row"><span class="note-label">機場</span><span class="note-val">仁川國際機場 ICN（第1、第2航廈注意區分）</span></div>
+    </div>
+    <div class="notes-block">
+      <h3>實用 APP</h3>
+      <div class="note-row"><span class="note-label">地鐵導航</span><span class="note-val">Naver Map / Kakao Map</span></div>
+      <div class="note-row"><span class="note-label">翻譯</span><span class="note-val">Papago（韓文辨識準確率高）</span></div>
+      <div class="note-row"><span class="note-label">計程車</span><span class="note-val">Kakao T</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- PACK -->
+<div class="page" id="page-pack">
+  <div class="card" style="margin:14px 14px 0;border-radius:8px;overflow:hidden;">
+    <div class="pack-category">
+      <div class="pack-cat-header">證件 &amp; 金融</div>
+      <div class="pack-items">
+        <div class="pack-item"><input type="checkbox" id="p1" onchange="upd()"><label for="p1">護照</label></div>
+        <div class="pack-item"><input type="checkbox" id="p2" onchange="upd()"><label for="p2">信用卡 / 現金（韓圓）</label></div>
+        <div class="pack-item"><input type="checkbox" id="p3" onchange="upd()"><label for="p3">旅遊保險單</label></div>
+        <div class="pack-item"><input type="checkbox" id="p4" onchange="upd()"><label for="p4">電子機票截圖</label></div>
+        <div class="pack-item"><input type="checkbox" id="p5" onchange="upd()"><label for="p5">飯店確認信截圖</label></div>
+        <div class="pack-item"><input type="checkbox" id="p6" onchange="upd()"><label for="p6">T-money 交通卡</label></div>
+      </div>
+    </div>
+    <div class="pack-category">
+      <div class="pack-cat-header">3C &amp; 電源</div>
+      <div class="pack-items">
+        <div class="pack-item"><input type="checkbox" id="p7" onchange="upd()"><label for="p7">手機 + 充電線</label></div>
+        <div class="pack-item"><input type="checkbox" id="p8" onchange="upd()"><label for="p8">行動電源</label></div>
+        <div class="pack-item"><input type="checkbox" id="p9" onchange="upd()"><label for="p9">充電線 Type-C</label></div>
+        <div class="pack-item"><input type="checkbox" id="p10" onchange="upd()"><label for="p10">韓規插頭轉接頭（C型圓腳）</label></div>
+      </div>
+    </div>
+    <div class="pack-category">
+      <div class="pack-cat-header">衣物</div>
+      <div class="pack-items">
+        <div class="pack-item"><input type="checkbox" id="p11" onchange="upd()"><label for="p11">換洗衣物（4套）</label></div>
+        <div class="pack-item"><input type="checkbox" id="p12" onchange="upd()"><label for="p12">輕薄外套（早晚涼）</label></div>
+        <div class="pack-item"><input type="checkbox" id="p13" onchange="upd()"><label for="p13">舒適走路鞋</label></div>
+        <div class="pack-item"><input type="checkbox" id="p14" onchange="upd()"><label for="p14">折疊傘</label></div>
+      </div>
+    </div>
+    <div class="pack-category">
+      <div class="pack-cat-header">盥洗 &amp; 醫藥</div>
+      <div class="pack-items">
+        <div class="pack-item"><input type="checkbox" id="p15" onchange="upd()"><label for="p15">洗面乳 / 保養品</label></div>
+        <div class="pack-item"><input type="checkbox" id="p16" onchange="upd()"><label for="p16">防曬乳 SPF50+</label></div>
+        <div class="pack-item"><input type="checkbox" id="p17" onchange="upd()"><label for="p17">感冒藥 / 腸胃藥</label></div>
+        <div class="pack-item"><input type="checkbox" id="p18" onchange="upd()"><label for="p18">OK繃 / 消毒棉片</label></div>
+        <div class="pack-item"><input type="checkbox" id="p19" onchange="upd()"><label for="p19">口罩</label></div>
+      </div>
+    </div>
+    <div class="pack-category">
+      <div class="pack-cat-header">其他</div>
+      <div class="pack-items">
+        <div class="pack-item"><input type="checkbox" id="p20" onchange="upd()"><label for="p20">購物袋（折疊式）</label></div>
+        <div class="pack-item"><input type="checkbox" id="p21" onchange="upd()"><label for="p21">眼藥水</label></div>
+        <div class="pack-item"><input type="checkbox" id="p22" onchange="upd()"><label for="p22">頸枕</label></div>
+        <div class="pack-item"><input type="checkbox" id="p23" onchange="upd()"><label for="p23">零食 / 飲料（飛機用）</label></div>
+      </div>
+    </div>
+  </div>
+  <div class="pack-progress-bar-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+    <div class="progress-text" id="prog-text">0 / 23</div>
+  </div>
+</div>
+
+<!-- Bottom nav -->
+<nav class="bottom-nav">
+  <button class="nav-item active" id="nav-days" onclick="showPage('page-days')">
+    <span class="nav-icon">🗓</span>
+    <span class="nav-label">行程</span>
+  </button>
+  <button class="nav-item" id="nav-notes" onclick="showPage('page-notes')">
+    <span class="nav-icon">📋</span>
+    <span class="nav-label">備註</span>
+  </button>
+  <button class="nav-item" id="nav-pack" onclick="showPage('page-pack')">
+    <span class="nav-icon">🧳</span>
+    <span class="nav-label">行李</span>
+  </button>
+</nav>
+
+<div id="print-area" style="display:none"></div>
+
+<div id="lightbox" onclick="closeLightbox()">
+  <img id="lightbox-img" src="" alt="">
+</div>
+
+<script>
+const DAYS = [
+  {
+    label: 'Day 1', date: '6/11',
+    title: '抵達首爾 × 入住',
+    maps: [
+      { src: '', label: '仁川機場快線 AREX' },
+      { src: '', label: '首爾地鐵 4號線' },
+    ],
+    routes: [
+      { place: '23:30抵達仁川國際機場', note: '入境審查' },
+      { place: '計程車', note: '호텔 인피니  地址: 송파구 백제고분로 268, 송파구, 서울특별시' },
+      { place: '01:00 飯店 Check-in ', note: '明洞或首爾站一帶飯店' },
+    ]
+  },
+  {
+    label: 'Day 2', date: '6/12',
+    title: '樂天樂園 x 樂天樂園戶外 x maple AGIT',
+    maps: [
+      { src: '樂天樂園', label: '롯데월드 어드벤처' },
+      { src: '', label: '首爾地鐵 2號線' },
+    ],
+    routes: [
+      { place: '09:00 樂天樂園', note: '' },
+    ]
+  },
+  {
+    label: 'Day 3', date: '6/13',
+    title: '寶可夢',
+    maps: [
+      { src: '', label: '京春線（ITX 青春號）' },
+      { src: '', label: '首爾地鐵 6號線' },
+    ],
+    routes: [
+      { place: '07:30 寶可夢', note: '搭乘 ITX 青春號（청춘）→ 加平站（약 1hr）<br>建議提前在 KORAIL 官網訂票' },
+    ]
+  },
+  {
+    label: 'Day 4', date: '6/14',
+    title: '回國',
+    maps: [
+    ],
+    routes: [
+      { place: '09:30 計程車', note: '인천국제공항 T2' },
+      { place: '10:30 抵達機場', note: '辦理登機' },
+    ]
+  },
+];
+
+const PAGE_META = {
+  'page-days':       { title: '🇰🇷 韓國四日遊', sub: '',  back: false, nav: 'nav-days'  },
+  'page-day-detail': { title: '',               sub: '',  back: true,  nav: 'nav-days'  },
+  'page-notes':      { title: '行程備註',        sub: '',  back: false, nav: 'nav-notes' },
+  'page-pack':       { title: '行李清單',        sub: '',  back: false, nav: 'nav-pack'  },
+};
+
+let navHistory = ['page-days'];
+
+function renderDayList() {
+  const container = document.getElementById('day-list-content');
+  container.innerHTML = DAYS.map((day, i) => `
+    <div class="day-card" onclick="showDay(${i})">
+      <div class="day-badge">${day.label}</div>
+      <div class="day-card-info">
+        <div class="day-card-title">${day.title}</div>
+        <div class="day-card-sub">${day.date}　${day.routes.length} 個地點</div>
+      </div>
+      <span class="day-card-arrow">›</span>
+    </div>`).join('');
+}
+renderDayList();
+
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+
+  if (navHistory[navHistory.length - 1] !== id) navHistory.push(id);
+
+  const meta = PAGE_META[id] || PAGE_META['page-days'];
+  document.getElementById('page-title').textContent = meta.title;
+  document.getElementById('page-sub').textContent   = meta.sub;
+  document.getElementById('back-btn').classList.toggle('show', meta.back);
+
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  if (meta.nav) document.getElementById(meta.nav).classList.add('active');
+}
+
+function goBack() {
+  navHistory.pop();
+  const prev = navHistory[navHistory.length - 1] || 'page-days';
+  navHistory.pop();
+  showPage(prev);
+}
+
+function showDay(index) {
+  const day = DAYS[index];
+
+  const mapsHtml = day.maps.map(m =>
+    m.src
+      ? `<div class="day-map-item">
+           <img src="${m.src}" alt="${m.label}" onclick="openLightbox(this.src)">
+           <div class="map-label">${m.label}</div>
+         </div>`
+      : `<div class="day-map-placeholder">🗺 ${m.label}</div>`
+  ).join('');
+
+  const routesHtml = day.routes.map(r => `
+    <div class="route-item">
+      <div class="route-dot"></div>
+      <div class="route-content">
+        <div class="route-place">${r.place}</div>
+        <div class="route-note">${r.note}</div>
+      </div>
+    </div>`).join('');
+
+  document.getElementById('day-detail-content').innerHTML = `
+    <div class="day-maps">${mapsHtml}</div>
+    <div class="card">
+      <div class="card-header"><h2>${day.label}　${day.date}</h2></div>
+      <div class="card-body">
+        <div class="route-list">${routesHtml}</div>
+      </div>
+    </div>`;
+
+  PAGE_META['page-day-detail'].title = `${day.label}　${day.title}`;
+  showPage('page-day-detail');
+}
+
+function upd() {
+  const all  = document.querySelectorAll('.pack-item input[type=checkbox]');
+  const done = document.querySelectorAll('.pack-item input[type=checkbox]:checked');
+  const pct  = Math.round(done.length / all.length * 100);
+  document.getElementById('prog-fill').style.width = pct + '%';
+  document.getElementById('prog-text').textContent  = done.length + ' / ' + all.length;
+}
+
+function printAll() {
+  const area = document.getElementById('print-area');
+
+  let out = `<div class="pr-cover">
+    <h1>🇰🇷 韓國首爾</h1>
+    <p>四日遊行程規劃</p>
+  </div>`;
+
+  out += '<div class="pr-section-title">每日行程</div>';
+  DAYS.forEach(day => {
+    const mapsHtml = day.maps.map(m =>
+      m.src
+        ? `<div style="flex:1;min-width:0">
+             <img class="pr-map-img" src="${m.src}" alt="${m.label}" style="width:100%">
+             <div class="pr-map-label">${m.label}</div>
+           </div>`
+        : `<div class="pr-map-placeholder">[ ${m.label} ]</div>`
+    ).join('');
+
+    const routes = day.routes.map(r => `
+      <div class="pr-route">
+        <div class="pr-dot"></div>
+        <div>
+          <div class="pr-route-place">${r.place}</div>
+          <div class="pr-route-note">${r.note}</div>
+        </div>
+      </div>`).join('');
+
+    out += `<div class="pr-day">
+      <div class="pr-day-header">
+        <h2>${day.label}　${day.title}</h2>
+        <span>${day.date}</span>
+      </div>
+      <div class="pr-maps">${mapsHtml}</div>
+      ${routes}
+    </div>`;
+  });
+
+  out += '<div class="pr-section-title" style="page-break-before:always">行程備註</div>';
+  document.querySelectorAll('#page-notes .notes-block').forEach(block => {
+    const title = block.querySelector('h3').textContent;
+    const rows = Array.from(block.querySelectorAll('.note-row')).map(row =>
+      `<div class="pr-note-row">
+        <span class="pr-note-label">${row.querySelector('.note-label').textContent}</span>
+        <span>${row.querySelector('.note-val').textContent}</span>
+      </div>`
+    ).join('');
+    out += `<div class="pr-note-block"><h3>${title}</h3>${rows}</div>`;
+  });
+
+  out += '<div class="pr-section-title">行李清單</div>';
+  document.querySelectorAll('#page-pack .pack-category').forEach(cat => {
+    const title = cat.querySelector('.pack-cat-header').textContent;
+    const items = Array.from(cat.querySelectorAll('.pack-item')).map(item => {
+      const checked = item.querySelector('input[type=checkbox]').checked;
+      const lbl = item.querySelector('label').textContent;
+      return `<div class="pr-pack-item"><span class="pr-check-box ${checked ? 'checked' : ''}"></span>${lbl}</div>`;
+    }).join('');
+    out += `<div class="pr-pack-section"><h3>${title}</h3><div class="pr-pack-grid">${items}</div></div>`;
+  });
+
+  area.innerHTML = out;
+  area.style.display = 'block';
+  window.print();
+  setTimeout(() => {
+    area.style.display = 'none';
+    area.innerHTML = '';
+  }, 500);
+}
+
+function openLightbox(src) {
+  document.getElementById('lightbox-img').src = src;
+  document.getElementById('lightbox').classList.add('show');
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('show');
+}
+</script>
+</body>
+</html>
